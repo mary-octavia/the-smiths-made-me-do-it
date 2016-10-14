@@ -89,15 +89,6 @@ def extract_lexical_features(lyrics):
 			f.write(str(ld) + "," + str(lr) + "\n")
 
 
-# class LDTransformer(TransformerMixin):
-
-#     def transform(self, X, **transform_params):
-# 		hours = DataFrame(X['datetime'].apply(lambda x: x.hour))
-# 		return hours
-
-#     def fit(self, X, y=None, **fit_params):
-#         return self
-
 
 def get_best_features(X, y, vectorizer):
 	'''get names of best features in X from vectorizer'''
