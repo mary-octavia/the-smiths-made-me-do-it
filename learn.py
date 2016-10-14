@@ -1,5 +1,10 @@
 # import metrics
+import re
 import json
+import codecs
+import string
+import numpy as np
+import sklearn.feature_selection as fs
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import Binarizer
 from sklearn.pipeline import Pipeline
@@ -12,12 +17,8 @@ from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.stem import SnowballStemmer
 from sklearn.pipeline import FeatureUnion
 # from sklearn.feature_selection import SelectKBest
-import sklearn.feature_selection as fs
 
-import numpy as np
-import codecs
-import re
-import string
+
 
 def get_preprocessor(suffix=''):
     def preprocess(unicode_text):
@@ -76,6 +77,7 @@ def calculate_lexical_richness(lyrics):
 	# print len(unique_s)," ", len(stems) #debug
 	return float(len(unique_s))/float(len(stems))
 
+
 def extract_lexical_features(lyrics):
 
 	with open("lexical-features.txt", "w") as f:
@@ -126,7 +128,7 @@ if __name__ == '__main__':
 	skf = StratifiedKFold(y, n_folds=10)
 	X_new = preprocess_data(X, n=3, suffix="", binarize=True)
 	clf = LinearSVC()
-	
+
 	accuracy, recall, precision, f1 = [], [], [], []
 	for train_index, test_index in skf:
 		X_train, X_test = X_new[train_index], X_new[test_index]
