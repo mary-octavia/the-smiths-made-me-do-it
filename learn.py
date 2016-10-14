@@ -46,7 +46,7 @@ def preprocess_data(X, n, suffix='', binarize=True):
     X = Binarizer(copy=False).fit_transform(X) if binarize else X
     return X
 
-def calculate_lexical_density(lyrics):
+def compute_lexical_density(lyrics):
 	'''unique tokens/ tokens''' 
 	replace_punctuation = string.maketrans(string.punctuation, ' '*len(string.punctuation))
 	lyrics = lyrics.translate(replace_punctuation)
@@ -59,7 +59,7 @@ def calculate_lexical_density(lyrics):
 			unique_w.append(word)
 	return float(len(unique_w))/float(len(lyrics))
 	
-def calculate_lexical_richness(lyrics):
+def compute_lexical_richness(lyrics):
 	'''unique stems / stems'''
 	replace_punctuation = string.maketrans(string.punctuation, ' '*len(string.punctuation))
 	lyrics = lyrics.translate(replace_punctuation)
@@ -86,8 +86,8 @@ def extract_lexical_features(lyrics, fname):
 		print lyrics[0]
 		for lyric in lyrics:
 			# print lyric, "\n"
-			ld = calculate_lexical_density(lyric)
-			lr = calculate_lexical_richness(lyric)
+			ld = compute_lexical_density(lyric)
+			lr = compute_lexical_richness(lyric)
 			f.write(str(ld) + "," + str(lr) + "\n")
 
 
