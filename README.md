@@ -1,6 +1,6 @@
 Playing around with Authorship Attribution and Morrissey 
 ========================
-Using:
+Dependencies:
 - scrapy 
 - scikit-learn 
 - nltk
