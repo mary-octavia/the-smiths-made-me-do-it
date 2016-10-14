@@ -78,9 +78,11 @@ def calculate_lexical_richness(lyrics):
 	return float(len(unique_s))/float(len(stems))
 
 
-def extract_lexical_features(lyrics):
-
-	with open("lexical-features.txt", "w") as f:
+def extract_lexical_features(lyrics, fname):
+	'''extract lexical features from lyrics
+	and write them to file fname 
+	'''
+	with open(fname, "w") as f:
 		print lyrics[0]
 		for lyric in lyrics:
 			# print lyric, "\n"
@@ -103,11 +105,12 @@ def get_best_features(X, y, vectorizer):
 			print fnames[i]
 
 if __name__ == '__main__':
-	filename = 'sm-vs-all-lyrics.txt'
+	f_lyrics = "sm-vs-all-lyrics.txt"
+	f_lexft = "lexical-features.txt"
 
-	X, y = load_data(filename)
+	X, y = load_data(f_lyrics)
 
-	# extract_lexical_features(X)
+	# extract_lexical_features(X, f_lexft)
 
 	'''get best unigram features with ANOVA'''
 	vectorizer = CountVectorizer(analyzer='word', ngram_range=(1, 1))
