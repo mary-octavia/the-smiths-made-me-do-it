@@ -199,17 +199,23 @@ if __name__ == '__main__':
 	# X_new = preprocess_data(X, n=3, suffix="", binarize=True)
 	clf = LinearSVC(class_weight='balanced')
 
-	vectorizer_pipe = Pipeline([
+	bow_pipe = Pipeline([
 							# ('transformer', get_tokens()),
-                            ('bow-vectorizer', CountVectorizer(analyzer='char', ngram_range=(1,3))),
+                            ('bow-vectorizer', CountVectorizer(analyzer='word', ngram_range=(1,1))),
+                            ('binarizer', Binarizer(copy=False))
+                           ])
+
+	ngram_pipe = Pipeline([
+							# ('transformer', get_tokens()),
+                            ('bow-vectorizer', CountVectorizer(analyzer='char', ngram_range=(4,4))),
                             ('binarizer', Binarizer(copy=False))
                            ])
 
 	feature_union = FeatureUnion([
-								('lex_dens', clone(get_lex('dens'))),
-								('lex_rich', clone(get_lex('rich'))),
-								('vectorizer', vectorizer_pipe)
-								# ('vectorizer', CountVectorizer(analyzer='word', ngram_range=(1,1))),
+								# ('lex_dens', clone(get_lex('dens'))),
+								# ('lex_rich', clone(get_lex('rich'))),
+								('bow', bow_pipe),
+								('ngram', ngram_pipe)
                                 ])
 
 	X_new = feature_union.fit_transform(X)
