@@ -3,6 +3,7 @@ import re
 import json
 import codecs
 import string
+import copy as cp
 import numpy as np
 import sklearn.feature_selection as fs
 from sklearn.feature_extraction.text import CountVectorizer
@@ -16,27 +17,16 @@ from sklearn.grid_search import GridSearchCV
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.stem import SnowballStemmer
 from sklearn.pipeline import FeatureUnion
+from sklearn.base import BaseEstimator
+from sklearn.base import TransformerMixin
+from sklearn.base import clone
 # from sklearn.feature_selection import SelectKBest
-
 
 
 def get_preprocessor(suffix=''):
     def preprocess(unicode_text):
         return unicode(unicode_text.strip().lower() + suffix)
     return preprocess
-
-def load_data(filename='sm-vs-all-lyrics.txt'):
-    lyrics, y = [], []
-    with open(filename, 'r') as f:
-        for line in f:
-            lyr, label = line.split("\t")
-            lyrics.append(lyr)
-            y.append(int(label))
-    lyrics, y = np.array(lyrics), np.array(y, dtype=np.int)
-
-    for i in range(len(lyrics)):
-    	lyrics[i] = lyrics[i].replace("_", " _ ")
-    return lyrics, y
 
 
 def preprocess_data(X, n, suffix='', binarize=True):
@@ -46,50 +36,135 @@ def preprocess_data(X, n, suffix='', binarize=True):
     X = Binarizer(copy=False).fit_transform(X) if binarize else X
     return X
 
-def compute_lexical_density(lyrics):
-	'''unique tokens/ tokens''' 
+
+def load_data(filename='sm-vs-all-lyrics.txt'):
+    lyrics, y = [], []
+
+    with open(filename, 'r') as f:
+    # with open(filename, 'r') as f:
+        for line in f:
+            # lyr, label = line.split("\t")
+            aux = line.split("\t")
+            if len(aux) != 2:
+            	print "aux", aux
+            else:
+            	lyr, label = line.split("\t")
+            	lyrics.append(preprocess_lyric(lyr))
+            	y.append(int(label))
+
+    lyrics, y = np.array(lyrics), np.array(y, dtype=np.int)
+
+    for i in range(len(lyrics)):
+    	lyrics[i] = lyrics[i].replace("_", " _ ")
+    return lyrics, y
+
+
+def preprocess_lyric(lyric):
+	new_lyric = cp.deepcopy(lyric)
+	# punct = (string.punctuation).replace("_", "")
 	replace_punctuation = string.maketrans(string.punctuation, ' '*len(string.punctuation))
-	lyrics = lyrics.translate(replace_punctuation)
-	lyrics = lyrics.decode("utf8")
-	lyrics = lyrics.split()
-	unique_w = []
-	for word in lyrics:
-		word = word.lower()
-		if word not in unique_w:
-			unique_w.append(word)
-	return float(len(unique_w))/float(len(lyrics))
-	
-def compute_lexical_richness(lyrics):
-	'''unique stems / stems'''
-	replace_punctuation = string.maketrans(string.punctuation, ' '*len(string.punctuation))
-	lyrics = lyrics.translate(replace_punctuation)
-	lyrics =lyrics.decode("utf8")
-	# print lyrics.encode("utf8") #debug
-	lyrics = lyrics.split()
-	stemmer = SnowballStemmer("english")
-	stems = []
-	unique_s = []
-	for word in lyrics:
-		stems.append(stemmer.stem(word))
-	for stem in stems:
-		if stem not in unique_s:
-			unique_s.append(stem)
-	# print len(unique_s)," ", len(stems) #debug
-	return float(len(unique_s))/float(len(stems))
+	new_lyric = new_lyric.translate(replace_punctuation)
+	new_lyric = new_lyric.decode("utf8")
+	return new_lyric
 
 
-def extract_lexical_features(lyrics, fname):
-	'''extract lexical features from lyrics
-	and write them to file fname 
-	'''
-	with open(fname, "w") as f:
-		print lyrics[0]
-		for lyric in lyrics:
-			# print lyric, "\n"
-			ld = compute_lexical_density(lyric)
-			lr = compute_lexical_richness(lyric)
-			f.write(str(ld) + "," + str(lr) + "\n")
+# def preprocess_lyrics(lyrics):
+# 	'''replace punctuation and tokenize'''
+# 	print "entered preprocessing"
+# 	new_lyrics = cp.deepcopy(lyrics)
+# 	# punct = (string.punctuation).replace("_", "")
+# 	replace_punctuation = string.maketrans(string.punctuation, ' '*len(string.punctuation))
 
+# 	for i in range(len(new_lyrics)):
+
+# 		aux = new_lyrics[i].tostring()
+# 		aux = aux.translate(replace_punctuation)
+# 		aux = aux.decode("utf8")
+# 		# print i, aux.encode("utf8")
+# 		new_lyrics[i] = aux.encode("utf8")
+# 		# print i, "new_lyrics[i]", new_lyrics[i]
+# 		# new_lyrics[i] = new_lyrics[i].decode("utf8")
+
+# 	return new_lyrics
+
+
+class get_lex(BaseEstimator, TransformerMixin):
+    '''transformer that gets lexical features for each 
+    lyric in lyrics'''
+
+    def __init__(self, lex):
+    	self.lex = lex
+
+
+    def fit(self, X, y=None):
+    	return self
+
+    def compute_lexical_density(self, lyrics):
+		'''unique tokens/ tokens''' 
+		# new_lyrics = preprocess_lyrics(lyrics)
+		unique_w = []
+		for word in lyrics:
+			word = word.lower()
+			if word not in unique_w:
+				unique_w.append(word)
+		# print "lyrics", lyrics
+		# print "lyrics.split()", lyrics.split()
+		return float(len(unique_w))/float(len(lyrics.split()))
+
+    def compute_lexical_richness(self, lyrics):
+		'''unique stems / stems'''
+		# new_lyrics = preprocess_lyrics(lyrics)
+		stemmer = SnowballStemmer("english")
+		stems, unique_s = [], []
+
+		for word in lyrics:
+			stems.append(stemmer.stem(word))
+
+		for stem in stems:
+			if stem not in unique_s:
+				unique_s.append(stem)
+		# print len(unique_s)," ", len(stems) #debug
+		return float(len(unique_s))/float(len(stems))
+
+
+    def transform(self, X, y=None):
+		print "entered extract lexical features"
+		# new_X = preprocess_lyrics(X)
+		new_X = cp.deepcopy(X)
+		lexic = []
+		for i in range(len(new_X)):
+			if self.lex == 'dens':
+				lexic.append(self.compute_lexical_density(new_X[i]))
+			elif self.lex == 'rich':
+				lexic.append(self.compute_lexical_richness(new_X[i]))
+			else:
+				print "error: command not supported"
+				return
+		print len(lexic)
+		print "lexical features extracted"
+		lexic = np.array(lexic)
+		lexic = lexic.reshape(-1,1)
+
+		return lexic
+
+def write_to_file(X, fname):
+
+	# nx = cp.deepcopy(X)
+	with open(fname, 'w') as f:
+		for i in range(len(X)):
+			f.write(X[i] + "\n")
+
+# def extract_lexical_features(lyrics, fname):
+# 	'''extract lexical features from lyrics
+# 	and write them to file fname 
+# 	'''
+# 	with open(fname, "w") as f:
+# 		print lyrics[0]
+# 		for lyric in lyrics:
+# 			# print lyric, "\n"
+# 			ld = compute_lexical_density(lyric)
+# 			lr = compute_lexical_richness(lyric)
+# 			f.write(str(ld) + "," + str(lr) + "\n")
 
 
 def get_best_features(X, y, vectorizer):
@@ -104,6 +179,7 @@ def get_best_features(X, y, vectorizer):
 		if index_v[i] == True:
 			print fnames[i]
 
+
 if __name__ == '__main__':
 	f_lyrics = "sm-vs-all-lyrics.txt"
 	f_lexft = "lexical-features.txt"
@@ -114,14 +190,33 @@ if __name__ == '__main__':
 
 	'''get best unigram features with ANOVA'''
 	vectorizer = CountVectorizer(analyzer='word', ngram_range=(1, 1))
-	X_new = vectorizer.fit_transform(X)
-	get_best_features(X_new, y, vectorizer)
+	# X_new = vectorizer.fit_transform(X)
+	# get_best_features(X_new, y, vectorizer)
 
 
 	'''cross-validation block'''
 	skf = StratifiedKFold(y, n_folds=10)
-	X_new = preprocess_data(X, n=3, suffix="", binarize=True)
-	clf = LinearSVC()
+	# X_new = preprocess_data(X, n=3, suffix="", binarize=True)
+	clf = LinearSVC(class_weight='balanced')
+
+	vectorizer_pipe = Pipeline([
+							# ('transformer', get_tokens()),
+                            ('bow-vectorizer', CountVectorizer(analyzer='char', ngram_range=(1,3))),
+                            ('binarizer', Binarizer(copy=False))
+                           ])
+
+	feature_union = FeatureUnion([
+								('lex_dens', clone(get_lex('dens'))),
+								('lex_rich', clone(get_lex('rich'))),
+								('vectorizer', vectorizer_pipe)
+								# ('vectorizer', CountVectorizer(analyzer='word', ngram_range=(1,1))),
+                                ])
+
+	X_new = feature_union.fit_transform(X)
+	# print X_new[:20]
+	print "tshape", X_new.shape
+	# write_to_file(X_new, "lexic-ft")
+
 
 	accuracy, recall, precision, f1 = [], [], [], []
 	for train_index, test_index in skf:
@@ -132,11 +227,19 @@ if __name__ == '__main__':
 
 		print "predicting"
 		y_pred = clf.predict(X_test)
+		#debug------
+		count_pred, count_tst = 0, 0
+		print len(y_pred) == len(y_test), "len y_pred", len(y_pred)
+		for i in range(len(y_pred)):
+			if y_pred[i] == 1:
+				count_pred += 1
+		print "count_pred", count_pred
 		print classification_report(y_test, y_pred)
+		#debug-----
 		accuracy.append(accuracy_score(y_test, y_pred))
-		precision.append(precision_score(y_test, y_pred, pos_label=1, average='binary'))
-		recall.append(recall_score(y_test, y_pred, pos_label=1, average='binary'))
-		f1.append(f1_score(y_test, y_pred, pos_label=1, average='binary'))
+		precision.append(precision_score(y_test, y_pred))
+		recall.append(recall_score(y_test, y_pred))
+		f1.append(f1_score(y_test, y_pred))
 
 	print "accuracy mean ", np.mean(accuracy), " accuracy std ", np.std(accuracy)
 	print "precision mean ", np.mean(precision), " and std ", np.std(precision)
