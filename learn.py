@@ -41,14 +41,12 @@ def load_data(filename='sm-vs-all-lyrics.txt'):
     lyrics, y = [], []
 
     with open(filename, 'r') as f:
-    # with open(filename, 'r') as f:
         for line in f:
-            # lyr, label = line.split("\t")
             aux = line.split("\t")
             if len(aux) != 2:
             	print "aux", aux
             else:
-            	lyr, label = line.split("\t")
+            	lyr, label = aux[0], aux[1]
             	lyrics.append(preprocess_lyric(lyr))
             	y.append(int(label))
 
@@ -61,31 +59,11 @@ def load_data(filename='sm-vs-all-lyrics.txt'):
 
 def preprocess_lyric(lyric):
 	new_lyric = cp.deepcopy(lyric)
-	# punct = (string.punctuation).replace("_", "")
+	punct = (string.punctuation).replace("_", "")
 	replace_punctuation = string.maketrans(string.punctuation, ' '*len(string.punctuation))
 	new_lyric = new_lyric.translate(replace_punctuation)
 	new_lyric = new_lyric.decode("utf8")
 	return new_lyric
-
-
-# def preprocess_lyrics(lyrics):
-# 	'''replace punctuation and tokenize'''
-# 	print "entered preprocessing"
-# 	new_lyrics = cp.deepcopy(lyrics)
-# 	# punct = (string.punctuation).replace("_", "")
-# 	replace_punctuation = string.maketrans(string.punctuation, ' '*len(string.punctuation))
-
-# 	for i in range(len(new_lyrics)):
-
-# 		aux = new_lyrics[i].tostring()
-# 		aux = aux.translate(replace_punctuation)
-# 		aux = aux.decode("utf8")
-# 		# print i, aux.encode("utf8")
-# 		new_lyrics[i] = aux.encode("utf8")
-# 		# print i, "new_lyrics[i]", new_lyrics[i]
-# 		# new_lyrics[i] = new_lyrics[i].decode("utf8")
-
-# 	return new_lyrics
 
 
 class get_lex(BaseEstimator, TransformerMixin):
@@ -147,24 +125,12 @@ class get_lex(BaseEstimator, TransformerMixin):
 
 		return lexic
 
-def write_to_file(X, fname):
+# def write_to_file(X, fname):
 
-	# nx = cp.deepcopy(X)
-	with open(fname, 'w') as f:
-		for i in range(len(X)):
-			f.write(X[i] + "\n")
-
-# def extract_lexical_features(lyrics, fname):
-# 	'''extract lexical features from lyrics
-# 	and write them to file fname 
-# 	'''
-# 	with open(fname, "w") as f:
-# 		print lyrics[0]
-# 		for lyric in lyrics:
-# 			# print lyric, "\n"
-# 			ld = compute_lexical_density(lyric)
-# 			lr = compute_lexical_richness(lyric)
-# 			f.write(str(ld) + "," + str(lr) + "\n")
+# 	# nx = cp.deepcopy(X)
+# 	with open(fname, 'w') as f:
+# 		for i in range(len(X)):
+# 			f.write(X[i] + "\n")
 
 
 def get_best_features(X, y, vectorizer):
@@ -186,27 +152,22 @@ if __name__ == '__main__':
 
 	X, y = load_data(f_lyrics)
 
-	# extract_lexical_features(X, f_lexft)
-
 	'''get best unigram features with ANOVA'''
-	vectorizer = CountVectorizer(analyzer='word', ngram_range=(1, 1))
+	# vectorizer = CountVectorizer(analyzer='word', ngram_range=(1, 1))
 	# X_new = vectorizer.fit_transform(X)
 	# get_best_features(X_new, y, vectorizer)
 
 
 	'''cross-validation block'''
 	skf = StratifiedKFold(y, n_folds=10)
-	# X_new = preprocess_data(X, n=3, suffix="", binarize=True)
 	clf = LinearSVC(class_weight='balanced')
 
 	bow_pipe = Pipeline([
-							# ('transformer', get_tokens()),
                             ('bow-vectorizer', CountVectorizer(analyzer='word', ngram_range=(1,1))),
                             ('binarizer', Binarizer(copy=False))
                            ])
 
 	ngram_pipe = Pipeline([
-							# ('transformer', get_tokens()),
                             ('bow-vectorizer', CountVectorizer(analyzer='char', ngram_range=(4,4))),
                             ('binarizer', Binarizer(copy=False))
                            ])
@@ -219,7 +180,6 @@ if __name__ == '__main__':
                                 ])
 
 	X_new = feature_union.fit_transform(X)
-	# print X_new[:20]
 	print "tshape", X_new.shape
 	# write_to_file(X_new, "lexic-ft")
 
