@@ -6,6 +6,7 @@ import string
 import copy as cp
 import numpy as np
 import sklearn.feature_selection as fs
+from nltk.corpus import stopwords as st
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import Binarizer
 from sklearn.pipeline import Pipeline
@@ -20,8 +21,10 @@ from sklearn.pipeline import FeatureUnion
 from sklearn.base import BaseEstimator
 from sklearn.base import TransformerMixin
 from sklearn.base import clone
+from ranker import create_occ_matrix, create_rank_matrix
 # from sklearn.feature_selection import SelectKBest
 
+stwords = st.words('english')
 
 def get_preprocessor(suffix=''):
     def preprocess(unicode_text):
@@ -35,6 +38,18 @@ def preprocess_data(X, n, suffix='', binarize=True):
     X = vectorizer.fit_transform(X)
     X = Binarizer(copy=False).fit_transform(X) if binarize else X
     return X
+
+
+def preprocess_lyric(lyric):
+	new_lyric = cp.deepcopy(lyric)
+	punct = (string.punctuation).replace("_", "")
+	replace_punctuation = string.maketrans(string.punctuation, ' '*len(string.punctuation))
+	new_lyric = new_lyric.translate(replace_punctuation)
+	new_lyric = new_lyric.decode("utf8")
+	new_lyric = new_lyric.replace("_", " _ ")
+	new_lyric = new_lyric.lower()
+	new_lyric = new_lyric.split()
+	return new_lyric
 
 
 def load_data(filename='sm-vs-all-lyrics.txt'):
@@ -51,19 +66,22 @@ def load_data(filename='sm-vs-all-lyrics.txt'):
             	y.append(int(label))
 
     lyrics, y = np.array(lyrics), np.array(y, dtype=np.int)
-
-    for i in range(len(lyrics)):
-    	lyrics[i] = lyrics[i].replace("_", " _ ")
     return lyrics, y
 
 
-def preprocess_lyric(lyric):
-	new_lyric = cp.deepcopy(lyric)
-	punct = (string.punctuation).replace("_", "")
-	replace_punctuation = string.maketrans(string.punctuation, ' '*len(string.punctuation))
-	new_lyric = new_lyric.translate(replace_punctuation)
-	new_lyric = new_lyric.decode("utf8")
-	return new_lyric
+class get_lyrics(BaseEstimator, TransformerMixin):
+    '''custom transformer to be used with 
+    CountVectorizer'''    
+    def fit(self, X, y=None):
+        return self
+    
+    def transform(self, X, y=None):
+        print "entered get_lyrics"
+        new_X = cp.deepcopy(X)
+        for i in range(len(new_X)):
+        	new_X[i] = " ".join(new_X[i])
+        # print "new_X[0]", new_X[0]
+        return new_X
 
 
 class get_lex(BaseEstimator, TransformerMixin):
@@ -79,7 +97,6 @@ class get_lex(BaseEstimator, TransformerMixin):
 
     def compute_lexical_density(self, lyrics):
 		'''unique tokens/ tokens''' 
-		# new_lyrics = preprocess_lyrics(lyrics)
 		unique_w = []
 		for word in lyrics:
 			word = word.lower()
@@ -87,11 +104,11 @@ class get_lex(BaseEstimator, TransformerMixin):
 				unique_w.append(word)
 		# print "lyrics", lyrics
 		# print "lyrics.split()", lyrics.split()
-		return float(len(unique_w))/float(len(lyrics.split()))
+		# return float(len(unique_w))/float(len(lyrics.split()))
+		return float(len(unique_w))/float(len(lyrics))
 
     def compute_lexical_richness(self, lyrics):
 		'''unique stems / stems'''
-		# new_lyrics = preprocess_lyrics(lyrics)
 		stemmer = SnowballStemmer("english")
 		stems, unique_s = [], []
 
@@ -107,7 +124,6 @@ class get_lex(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None):
 		print "entered extract lexical features"
-		# new_X = preprocess_lyrics(X)
 		new_X = cp.deepcopy(X)
 		lexic = []
 		for i in range(len(new_X)):
@@ -124,6 +140,23 @@ class get_lex(BaseEstimator, TransformerMixin):
 		lexic = lexic.reshape(-1,1)
 
 		return lexic
+
+class get_dist(BaseEstimator, TransformerMixin):   
+    def __init__(self, dist):
+        self.dist = dist
+        
+    def fit(self, X, y=None):
+        return self
+    
+    def transform(self, X, y=None):
+    	if self.dist == 'rank':
+    		X_ft = create_occ_matrix(X, stwords)
+    		X_rn = create_rank_matrix(X_ft)
+    	# elif self.dist == ''
+    	X_rn = np.array(X_rn)
+    	print "X_rn", X_rn.shape
+    	return X_rn
+
 
 # def write_to_file(X, fname):
 
@@ -162,21 +195,31 @@ if __name__ == '__main__':
 	skf = StratifiedKFold(y, n_folds=10)
 	clf = LinearSVC(class_weight='balanced')
 
-	bow_pipe = Pipeline([
-                            ('bow-vectorizer', CountVectorizer(analyzer='word', ngram_range=(1,1))),
-                            ('binarizer', Binarizer(copy=False))
+	bow_pipe = Pipeline([	
+							('get_lyrics', clone(get_lyrics())),
+                            ('bow-vectorizer', clone(CountVectorizer(analyzer='word', ngram_range=(1,1)))),
+                            ('binarizer', clone(Binarizer(copy=False)))
+                           ])
+
+	bosw_pipe = Pipeline([
+							('get_lyrics', clone(get_lyrics())),
+                            ('bow-vectorizer', clone(CountVectorizer(analyzer='word', ngram_range=(1,1), vocabulary=stwords))),
+                            ('binarizer', clone(Binarizer(copy=False)))
                            ])
 
 	ngram_pipe = Pipeline([
-                            ('bow-vectorizer', CountVectorizer(analyzer='char', ngram_range=(4,4))),
-                            ('binarizer', Binarizer(copy=False))
+							('get_lyrics', clone(get_lyrics())),
+                            ('bow-vectorizer', clone(CountVectorizer(analyzer='char', ngram_range=(4,4)))),
+                            ('binarizer', clone(Binarizer(copy=False)))
                            ])
 
 	feature_union = FeatureUnion([
-								# ('lex_dens', clone(get_lex('dens'))),
-								# ('lex_rich', clone(get_lex('rich'))),
+								('lex_dens', clone(get_lex('dens'))),
+								('lex_rich', clone(get_lex('rich'))),
 								('bow', bow_pipe),
-								('ngram', ngram_pipe)
+								('ngram', ngram_pipe),
+								('stop', bosw_pipe)
+								# ('rank_distance', get_dist('rank'))
                                 ])
 
 	X_new = feature_union.fit_transform(X)

@@ -7,7 +7,7 @@ from glob import glob
 from nltk import WordPunctTokenizer
 from nltk.corpus import stopwords
 
-# flabels = "case-ruling-labels-all.txt"
+flabels = "case-ruling-labels-all.txt"
 
 
 def load_data(fin=flabels):
@@ -32,15 +32,19 @@ def load_data(fin=flabels):
 
 # labels = load_data()
 
-def create_feature_matrix(labels, vocab):
+
+def create_occ_matrix(labels, vocab, binarize=False):
 	'''compute feature occurence matrix 
 	from labels, using the features in vocab
 	'''
 	docs_vect = np.zeros((len(labels), len(vocab)), dtype=np.int32)
 	for i in range(len(labels)):
 		for j in range(len(vocab)):
-			if vocab[j] in labels[i]: # feature present in document
-				docs_vect[i][j] = docs_vect[i][j] + 1
+			if binarize == True:
+				if vocab[j] in labels[i]: # feature present in document
+					docs_vect[i][j] = 1
+			else:
+				docs_vect[i][j] = labels[i].count(vocab[j])
 
 	print("len docs_vect:" +str(len(docs_vect)))
 	print("shape docs_vect:"+ str(docs_vect.shape))
@@ -62,9 +66,10 @@ def create_rank_matrix(docs_m):
 	rank_m = np.zeros((len(docs_m), len(docs_m)), dtype=np.int32)
 
 	for i in range(len(docs_m)):
-		for j in range(i, len(docs_m)):
-			rank_m[i,j] = rank_distance(docs_m[i], docs_m[j])
-			rank_m[j,i] = rank_distance(docs_m[i], docs_m[j])
+		for j in range(i+1, len(docs_m)):
+			rank = rank_distance(docs_m[i], docs_m[j])
+			rank_m[i,j] = rank
+			rank_m[j,i] = rank
 	print "rank matrix shape:", rank_m.shape
 	return rank_m
 
