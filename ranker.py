@@ -32,6 +32,16 @@ def load_data(fin=flabels):
 
 # labels = load_data()
 
+def write_matrix_to_file(mat, fout):
+
+	print "entered write_matrix_to_file"
+	with open(fout, 'w') as f:
+		for i in range(len(mat)):
+			f.write(" ".join([str(i) for i in mat[i]]))
+			if i != len(mat) - 1:
+				f.write("\n")
+	print "exited write_matrix_to_file"
+
 
 def create_occ_matrix(labels, vocab, binarize=False):
 	'''compute feature occurence matrix 
@@ -71,6 +81,8 @@ def create_rank_matrix(docs_m):
 			rank_m[i,j] = rank
 			rank_m[j,i] = rank
 	print "rank matrix shape:", rank_m.shape
+
+	write_matrix_to_file(rank_m, "rank_mat.txt")
 	return rank_m
 
 

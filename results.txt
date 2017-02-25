@@ -1,0 +1,91 @@
+
+1-2 ngram + lex 
+accuracy mean  0.92900137741  accuracy std  0.0150653447459
+precision mean  0.795834684751  and std  0.0854371918066
+recall mean  0.504232804233  and std  0.10698564467
+f1 mean  0.612715747347  and std  0.101217386788
+
+1-2 ngram bow + lex, c=0.1
+accuracy mean  0.928171487603  accuracy std  0.0143217694104
+precision mean  0.802420778396  and std  0.0789910967149
+recall mean  0.489682539683  and std  0.109379297858
+f1 mean  0.602193169418  and std  0.101000285018
+
+
+1-3 bow + lex c=0.1
+accuracy mean  0.925254820937  accuracy std  0.0136274318914
+precision mean  0.839079939668  and std  0.106813971419
+recall mean  0.427248677249  and std  0.106964709169
+f1 mean  0.559012762204  and std  0.103023550102
+
+1-1 bow + lex c=0.1
+accuracy mean  0.91321969697  accuracy std  0.0200819906899
+precision mean  0.659853069869  and std  0.140923673099
+recall mean  0.532804232804  and std  0.0978725147451
+f1 mean  0.582968763705  and std  0.0897382358053
+
+bow 1-1 binarizer false
+accuracy mean  0.908643250689  accuracy std  0.0205114757176
+precision mean  0.626429085421  and std  0.125561843656
+recall mean  0.536375661376  and std  0.0947024361478
+f1 mean  0.572318132616  and std  0.087807933105
+
+bow 1-1 binarizer true
+accuracy mean  0.941880165289  accuracy std  0.00969942730017
+precision mean  0.811304928377  and std  0.0615250773985
+recall mean  0.642592592593  and std  0.0648358674372
+f1 mean  0.714697977546  and std  0.0507675336409
+
+
+
+accuracy mean  0.941463498623  accuracy std  0.00942734644668
+precision mean  0.810937281318  and std  0.060754076794
+recall mean  0.638888888889  and std  0.0685384335014
+f1 mean  0.711738146679  and std  0.0508109200473
+
+
+
+lr + ld, lsvc class_weight=balanced, c=4
+accuracy mean  0.397438016529  accuracy std  0.0316516075822
+precision mean  0.109413561744  and std  0.0139857719773
+recall mean  0.601851851852  and std  0.0837271286763
+f1 mean  0.185090532047  and std  0.023724172219
+
+lr + ld + bow, lsvc class_weight=balanced, c=4
+accuracy mean  0.939803719008  accuracy std  0.0089939267465
+precision mean  0.798274206872  and std  0.0645118546311
+recall mean  0.638888888889  and std  0.0685384335014
+f1 mean  0.706075521394  and std  0.0469676809387
+
+
+bow, lsvc class_weight=balanced, c=4
+accuracy mean  0.940223829201  accuracy std  0.00986438267318
+precision mean  0.800176563774  and std  0.0689368208059
+recall mean  0.642592592593  and std  0.0669181449895
+f1 mean  0.709071139221  and std  0.0481920238997
+
+bow, lsvc class_weight=balanced
+accuracy mean  0.941463498623  accuracy std  0.00803905842842
+precision mean  0.803893695656  and std  0.061261770574
+recall mean  0.649867724868  and std  0.0550145298942
+f1 mean  0.716022903641  and std  0.0382429918541
+
+
+ngram 1-3 + lr + ld 
+accuracy mean  0.932327823691  accuracy std  0.0143966725363
+precision mean  0.748388386975  and std  0.0830839460065
+recall mean  0.617195767196  and std  0.0729990970683
+f1 mean  0.674579644445  and std  0.0678268317658
+
+
+
+
+
+
+
+
+
+
+
+
+

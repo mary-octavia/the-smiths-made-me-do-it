@@ -12,6 +12,7 @@ from sklearn.preprocessing import Binarizer
 from sklearn.pipeline import Pipeline
 from sklearn import naive_bayes
 from sklearn.svm import LinearSVC
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report, precision_score, recall_score, f1_score, accuracy_score
 from sklearn.cross_validation import KFold, LeaveOneOut, StratifiedKFold
 from sklearn.grid_search import GridSearchCV
@@ -121,7 +122,6 @@ class get_lex(BaseEstimator, TransformerMixin):
 		# print len(unique_s)," ", len(stems) #debug
 		return float(len(unique_s))/float(len(stems))
 
-
     def transform(self, X, y=None):
 		print "entered extract lexical features"
 		new_X = cp.deepcopy(X)
@@ -141,21 +141,41 @@ class get_lex(BaseEstimator, TransformerMixin):
 
 		return lexic
 
+
 class get_dist(BaseEstimator, TransformerMixin):   
     def __init__(self, dist):
         self.dist = dist
         
     def fit(self, X, y=None):
         return self
+
+    def read_matrix_from_file(self, fin):
+        print "entered read_matrix_from_file"
+        mat = []
+        with open(fin, 'r') as f:
+            for line in f:
+                mat.append(line)
+        print "matrix len", len(mat)
+
+        r_mat = np.zeros((len(mat), len(mat)), dtype=np.int32)
+        for i in range(len(mat)):
+            mat[i] = mat[i].split()
+
+        for i in range(len(mat)):
+            for j in range(len(mat[i])):
+                r_mat[i][j] = int(mat[i][j])
+        return r_mat
     
     def transform(self, X, y=None):
+    	
     	if self.dist == 'rank':
     		X_ft = create_occ_matrix(X, stwords)
-    		X_rn = create_rank_matrix(X_ft)
-    	# elif self.dist == ''
-    	X_rn = np.array(X_rn)
-    	print "X_rn", X_rn.shape
-    	return X_rn
+    		X_dst = create_rank_matrix(X_ft)
+    	elif self.dist == 'r_read':
+    		X_dst = self.read_matrix_from_file('rank_mat.txt')
+
+    	print "X_rn", X_dst.shape
+    	return X_dst
 
 
 # def write_to_file(X, fname):
@@ -214,12 +234,13 @@ if __name__ == '__main__':
                            ])
 
 	feature_union = FeatureUnion([
-								('lex_dens', clone(get_lex('dens'))),
-								('lex_rich', clone(get_lex('rich'))),
+								# ('lex_dens', clone(get_lex('dens'))),
+								# ('lex_rich', clone(get_lex('rich'))),
 								('bow', bow_pipe),
 								('ngram', ngram_pipe),
-								('stop', bosw_pipe)
+								('stop', bosw_pipe),
 								# ('rank_distance', get_dist('rank'))
+								# ('rank_distance', get_dist('r_read'))
                                 ])
 
 	X_new = feature_union.fit_transform(X)
