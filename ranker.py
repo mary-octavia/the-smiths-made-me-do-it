@@ -7,7 +7,7 @@ from glob import glob
 from nltk import WordPunctTokenizer
 from nltk.corpus import stopwords
 
-flabels = "case-ruling-labels-all.txt"
+flabels = "labels-all.txt"
 
 
 def load_data(fin=flabels):
