@@ -37,7 +37,7 @@ def write_matrix_to_file(mat, fout):
 	print "entered write_matrix_to_file"
 	with open(fout, 'w') as f:
 		for i in range(len(mat)):
-			f.write(" ".join([str(i) for i in mat[i]]))
+			f.write(" ".join([str(j) for j in mat[i]]))
 			if i != len(mat) - 1:
 				f.write("\n")
 	print "exited write_matrix_to_file"
