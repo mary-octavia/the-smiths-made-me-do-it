@@ -10,3 +10,4 @@ Files:
 - similar-scraper-combo.py - hardcoded scrapy spider class for scraping all the lyrics from the smiths related artists
 - learn.py - where the basic, bag of words, lexical feature, supervised learning magic happens; the feature union pipeline has the option of using rank distance too; some unigram feature selection with ANOVA also
 - ranker.py - file with all the rank distance related code
+- Generation Exps.ipynb - lyrics generation experiments
